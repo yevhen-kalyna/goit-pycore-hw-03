@@ -1,6 +1,7 @@
 """Тема 12: Серіалізація та копіювання об'єктів — адресна книга з pickle."""
 
 import pickle
+import signal
 from collections import UserDict
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -245,43 +246,56 @@ def load_data(filename: str = "addressbook.pkl") -> AddressBook:
 
 def main() -> None:
     book = load_data()
+
+    def handle_signal(signum: int, frame: Any) -> None:
+        save_data(book)
+        print("\nGood bye!")
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGHUP, handle_signal)
+
     print("Welcome to the assistant bot!")
 
-    while True:
-        user_input = input("Enter a command: ")
-        command, args = parse_input(user_input)
+    try:
+        while True:
+            user_input = input("Enter a command: ")
+            command, args = parse_input(user_input)
 
-        if command in ["close", "exit"]:
-            save_data(book)
-            print("Good bye!")
-            break
+            if command in ["close", "exit"]:
+                print("Good bye!")
+                break
 
-        elif command == "hello":
-            print("How can I help you?")
+            elif command == "hello":
+                print("How can I help you?")
 
-        elif command == "add":
-            print(add_contact(args, book))
+            elif command == "add":
+                print(add_contact(args, book))
 
-        elif command == "change":
-            print(change_contact(args, book))
+            elif command == "change":
+                print(change_contact(args, book))
 
-        elif command == "phone":
-            print(show_phone(args, book))
+            elif command == "phone":
+                print(show_phone(args, book))
 
-        elif command == "all":
-            print(show_all(book))
+            elif command == "all":
+                print(show_all(book))
 
-        elif command == "add-birthday":
-            print(add_birthday(args, book))
+            elif command == "add-birthday":
+                print(add_birthday(args, book))
 
-        elif command == "show-birthday":
-            print(show_birthday(args, book))
+            elif command == "show-birthday":
+                print(show_birthday(args, book))
 
-        elif command == "birthdays":
-            print(birthdays(book))
+            elif command == "birthdays":
+                print(birthdays(book))
 
-        else:
-            print("Invalid command.")
+            else:
+                print("Invalid command.")
+    except KeyboardInterrupt:
+        print("\nGood bye!")
+    finally:
+        save_data(book)
 
 
 if __name__ == "__main__":
